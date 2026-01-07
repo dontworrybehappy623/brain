@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PE Portfolio Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;450;500;600&display=swap');
+        * { font-family: 'Inter', -apple-system, sans-serif; }
+        body { background: #f8f9fb; }
+        .subtle-shadow { box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02); }
+        .table-row:hover { background-color: #fafbfc; }
+        .opt-btn { transition: all 0.15s ease; outline: none; }
+        .opt-btn:focus { outline: none; }
+        input:focus, select:focus { outline: none; box-shadow: 0 0 0 2px rgba(99,102,241,0.15); }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <!-- Login -->
+    <div id="login-screen" class="fixed inset-0 bg-slate-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl subtle-shadow p-8 max-w-sm w-full mx-4 border border-slate-100">
+            <div class="text-center mb-6">
+                <div class="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                </div>
+                <h1 class="text-lg font-medium text-slate-900">PE Portfolio Analysis</h1>
+                <p class="text-slate-500 text-sm mt-1">Enter access code</p>
+            </div>
+            <div class="space-y-3">
+                <input type="password" id="password-input" placeholder="••••••••" 
+                    class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-center text-sm tracking-widest"
+                    onkeypress="if(event.key==='Enter')checkPassword()">
+                <button onclick="checkPassword()" 
+                    class="w-full py-2.5 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors">
+                    Continue
+                </button>
+                <p id="error-msg" class="text-red-500 text-center text-xs hidden">Invalid code</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="hidden min-h-screen">
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+                <div>
+                    <h1 class="text-base font-semibold text-slate-900">PE Portfolio Analysis</h1>
+                    <p class="text-xs text-slate-500 mt-0.5">100 firms · 9,700+ portfolio companies</p>
+                </div>
+                <div class="flex items-center gap-6 text-xs">
+                    <div class="text-right">
+                        <span class="text-slate-400">Total AUM</span>
+                        <p class="text-slate-900 font-semibold">$2.1T</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-slate-400">Avg Whitespace</span>
+                        <p class="text-slate-900 font-semibold">52%</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-slate-400">Likely Buyers</span>
+                        <p class="text-slate-900 font-semibold">34</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-6 py-6">
+            <!-- Insight -->
+            <div class="bg-amber-50/50 border border-amber-100 rounded-lg px-4 py-3 mb-6 flex items-start gap-3">
+                <svg class="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/></svg>
+                <p class="text-xs text-amber-900 leading-relaxed">
+                    <span class="font-medium">Buy vs Build signal:</span> AUM/employee ratio reveals team structure. High ratios ($100M+) indicate lean teams likely to buy. Low ratios suggest large ops teams who may build in-house.
+                </p>
+            </div>
+
+            <!-- Main Grid -->
+            <div class="grid grid-cols-12 gap-6">
+                <!-- Left: Filters + Table -->
+                <div class="col-span-7">
+                    <!-- Filters -->
+                    <div class="bg-white rounded-lg border border-slate-200 subtle-shadow p-4 mb-4">
+                        <div class="grid grid-cols-5 gap-3">
+                            <div class="col-span-2">
+                                <label class="block text-xs text-slate-500 mb-1.5">Search</label>
+                                <input type="text" id="search-input" placeholder="Firm name..." 
+                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm"
+                                    oninput="filterTable()">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-500 mb-1.5">Industry</label>
+                                <select id="industry-filter" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm" onchange="filterTable()">
+                                    <option value="">All</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-500 mb-1.5">Whitespace</label>
+                                <select id="whitespace-filter" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm" onchange="filterTable()">
+                                    <option value="all">Any</option>
+                                    <option value="0-25">≤25%</option>
+                                    <option value="26-50">26-50%</option>
+                                    <option value="51-75">51-75%</option>
+                                    <option value="76-100">≥76%</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-500 mb-1.5">Buy Signal</label>
+                                <select id="buy-filter" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm" onchange="filterTable()">
+                                    <option value="all">Any</option>
+                                    <option value="high">Likely ($100M+)</option>
+                                    <option value="med">Maybe ($50-99M)</option>
+                                    <option value="low">Low (&lt;$50M)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="bg-white rounded-lg border border-slate-200 subtle-shadow overflow-hidden">
+                        <div class="overflow-x-auto max-h-[520px] overflow-y-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-slate-50 sticky top-0">
+                                    <tr class="text-left text-xs text-slate-500 font-medium">
+                                        <th class="px-4 py-3 cursor-pointer hover:text-slate-700" onclick="sortTable('firm')">Firm</th>
+                                        <th class="px-3 py-3 cursor-pointer hover:text-slate-700" onclick="sortTable('aum')">AUM</th>
+                                        <th class="px-3 py-3 cursor-pointer hover:text-slate-700" onclick="sortTable('top1')">Focus</th>
+                                        <th class="px-3 py-3 cursor-pointer hover:text-slate-700 text-center" onclick="sortTable('whitespace')">WS</th>
+                                        <th class="px-3 py-3 cursor-pointer hover:text-slate-700 text-right" onclick="sortTable('ratio')">$/Emp</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-body" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-2" id="result-count"></p>
+                </div>
+
+                <!-- Right: Chart -->
+                <div class="col-span-5">
+                    <div class="bg-white rounded-lg border border-slate-200 subtle-shadow p-5 sticky top-6">
+                        <div class="mb-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h2 class="text-sm font-medium text-slate-900">Opportunity Matrix</h2>
+                                    <p class="text-xs text-slate-500 mt-0.5">Concentration × Whitespace</p>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-xs text-slate-500">
+                                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>High WS + Conc</span>
+                                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>Other</span>
+                                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full border-2 border-orange-400 bg-transparent"></span>Likely buyer</span>
+                            </div>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="scatterChart"></canvas>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-slate-100">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-xs text-slate-500">Top targets by</p>
+                                <div class="flex gap-1">
+                                    <button id="opt-ws" onclick="toggleOptCriteria('ws')" class="opt-btn px-2 py-1 text-xs rounded border border-slate-200 text-slate-500 hover:border-slate-300">WS</button>
+                                    <button id="opt-conc" onclick="toggleOptCriteria('conc')" class="opt-btn px-2 py-1 text-xs rounded border border-slate-200 text-slate-500 hover:border-slate-300">Conc</button>
+                                    <button id="opt-ratio" onclick="toggleOptCriteria('ratio')" class="opt-btn px-2 py-1 text-xs rounded border border-slate-200 text-slate-500 hover:border-slate-300">$/Emp</button>
+                                </div>
+                            </div>
+                            <table class="w-full text-xs" style="table-layout:fixed;">
+                                <thead>
+                                    <tr class="text-slate-400 border-b border-slate-100">
+                                        <th class="text-left font-normal pb-1">Firm</th>
+                                        <th class="text-right font-normal pb-1" style="width:48px;">WS</th>
+                                        <th class="text-right font-normal pb-1" style="width:48px;">Conc</th>
+                                        <th class="text-right font-normal pb-1" style="width:64px;">$/Emp</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="top-targets"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="border-t border-slate-200 mt-12">
+            <div class="max-w-7xl mx-auto px-6 py-4 text-xs text-slate-400">
+                Data: PE firm portfolios, Ramp AI adoption, LinkedIn · 2024
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const ACCESS_CODE = "brain2024";
+
+        const peData = [{"firm": "KKR", "city": "New York", "aum": 117889, "portcos": 164, "top1": "IT Services", "top2": "Healthcare Services", "top3": "Industrials & Manufacturing", "concentration": 27.4, "whitespace": 42, "employees": 4900, "ratio": 24.1}, {"firm": "EQT", "city": "Stockholm", "aum": 113257, "portcos": 244, "top1": "Healthcare Services", "top2": "Technology (General)", "top3": "Energy & Utilities", "concentration": 26.6, "whitespace": 69, "employees": 890, "ratio": 127.3}, {"firm": "Blackstone", "city": "New York", "aum": 95721, "portcos": 6, "top1": "Technology (General)", "top2": "Energy & Utilities", "top3": "E-commerce & Marketplaces", "concentration": 33.3, "whitespace": 42, "employees": 4900, "ratio": 19.5}, {"firm": "Thoma Bravo", "city": "Chicago", "aum": 88181, "portcos": 148, "top1": "Software & SaaS", "top2": "Cybersecurity", "top3": "Healthcare Services", "concentration": 37.2, "whitespace": 34, "employees": 340, "ratio": 259.4}, {"firm": "TPG", "city": "San Francisco", "aum": 72584, "portcos": 272, "top1": "Healthcare Services", "top2": "Software & SaaS", "top3": "Consumer Discretionary", "concentration": 16.5, "whitespace": 69, "employees": 1900, "ratio": 38.2}, {"firm": "CVC Capital Partners", "city": "Luxembourg", "aum": 72465, "portcos": 154, "top1": "Retail", "top2": "Healthcare Services", "top3": "Technology (General)", "concentration": 22.7, "whitespace": 66, "employees": 1300, "ratio": 55.7}, {"firm": "Hg", "city": "London", "aum": 72462, "portcos": 58, "top1": "Software & SaaS", "top2": "Business Services", "top3": "Financial Services", "concentration": 55.2, "whitespace": 34, "employees": 420, "ratio": 172.5}, {"firm": "Hellman & Friedman", "city": "San Francisco", "aum": 50215, "portcos": 41, "top1": "Marketing & Media", "top2": "Financial Services", "top3": "Software & SaaS", "concentration": 24.4, "whitespace": 59, "employees": 220, "ratio": 228.2}, {"firm": "Clayton, Dubilier & Rice", "city": "New York", "aum": 49784, "portcos": 49, "top1": "Industrials & Manufacturing", "top2": "Healthcare Services", "top3": "Retail", "concentration": 34.7, "whitespace": 57, "employees": 430, "ratio": 115.8}, {"firm": "Insight Partners", "city": "New York", "aum": 48163, "portcos": 24, "top1": "Software & SaaS", "top2": "Healthcare Services", "top3": "Technology (General)", "concentration": 25.0, "whitespace": 34, "employees": 630, "ratio": 76.4}, {"firm": "Silver Lake", "city": "Menlo Park", "aum": 47100, "portcos": 75, "top1": "Software & SaaS", "top2": "Consumer Discretionary", "top3": "Education & Training", "concentration": 26.7, "whitespace": 34, "employees": 1300, "ratio": 36.2}, {"firm": "Clearlake Capital Group", "city": "Santa Monica", "aum": 45178, "portcos": 43, "top1": "Software & SaaS", "top2": "Industrials & Manufacturing", "top3": "Healthcare Services", "concentration": 23.3, "whitespace": 34, "employees": 150, "ratio": 301.2}, {"firm": "General Atlantic", "city": "New York", "aum": 44716, "portcos": 260, "top1": "Technology (General)", "top2": "Healthcare Services", "top3": "Financial Services", "concentration": 35.0, "whitespace": 42, "employees": 900, "ratio": 49.7}, {"firm": "Bain Capital", "city": "Boston", "aum": 40547, "portcos": 106, "top1": "Healthcare Services", "top2": "Industrials & Manufacturing", "top3": "IT Services", "concentration": 20.8, "whitespace": 69, "employees": 2200, "ratio": 18.4}, {"firm": "Advent International", "city": "Boston", "aum": 38223, "portcos": 186, "top1": "Technology (General)", "top2": "Industrials & Manufacturing", "top3": "Healthcare Services", "concentration": 18.8, "whitespace": 42, "employees": 1400, "ratio": 27.3}, {"firm": "The Carlyle Group", "city": "Washington DC", "aum": 36400, "portcos": 47, "top1": "Industrials & Manufacturing", "top2": "Consumer Products & Staples", "top3": "Business Services", "concentration": 17.0, "whitespace": 57, "employees": 2777, "ratio": 13.1}, {"firm": "Warburg Pincus", "city": "New York", "aum": 34234, "portcos": 154, "top1": "Technology (General)", "top2": "Financial Services", "top3": "Healthcare Services", "concentration": 31.8, "whitespace": 42, "employees": 1462, "ratio": 23.4}, {"firm": "Vista Equity Partners", "city": "Austin", "aum": 31881, "portcos": 94, "top1": "Software & SaaS", "top2": "Business Services", "top3": "Healthcare Services", "concentration": 27.7, "whitespace": 34, "employees": 870, "ratio": 36.6}, {"firm": "Apollo Global Management", "city": "New York", "aum": 31349, "portcos": 4, "top1": "Financial Services", "top2": "Logistics & Transportation", "top3": "Materials & Chemicals", "concentration": 25.0, "whitespace": 42, "employees": 5200, "ratio": 6.0}, {"firm": "TA Associates", "city": "Boston", "aum": 30500, "portcos": 130, "top1": "Technology (General)", "top2": "Healthcare Services", "top3": "Financial Services", "concentration": 61.5, "whitespace": 42, "employees": 870, "ratio": 35.1}, {"firm": "GTCR", "city": "Chicago", "aum": 30180, "portcos": 55, "top1": "Technology (General)", "top2": "Healthcare Services", "top3": "Consumer Discretionary", "concentration": 50.9, "whitespace": 42, "employees": 260, "ratio": 116.1}, {"firm": "Veritas Capital", "city": "New York", "aum": 29677, "portcos": 46, "top1": "Industrials & Manufacturing", "top2": "Healthcare Services", "top3": "Business Services", "concentration": 28.3, "whitespace": 57, "employees": 140, "ratio": 212.0}, {"firm": "Bridgepoint", "city": "London", "aum": 29323, "portcos": 83, "top1": "Consumer Products & Staples", "top2": "Healthcare Services", "top3": "Technology (General)", "concentration": 12.0, "whitespace": 66, "employees": 520, "ratio": 56.4}, {"firm": "New Mountain Capital", "city": "New York", "aum": 28537, "portcos": 46, "top1": "Healthcare Services", "top2": "Industrials & Manufacturing", "top3": "Insurance", "concentration": 19.6, "whitespace": 69, "employees": 370, "ratio": 77.1}, {"firm": "Partners Group", "city": "Baar", "aum": 27334, "portcos": 12, "top1": "Consumer Products & Staples", "top2": "Technology (General)", "top3": "Industrials & Manufacturing", "concentration": 25.0, "whitespace": 66, "employees": 1800, "ratio": 15.2}, {"firm": "Cinven", "city": "London", "aum": 27208, "portcos": 44, "top1": "Technology (General)", "top2": "Financial Services", "top3": "Healthcare Services", "concentration": 27.3, "whitespace": 42, "employees": 350, "ratio": 77.7}, {"firm": "Apax Partners", "city": "London", "aum": 27205, "portcos": 180, "top1": "Software & SaaS", "top2": "Financial Services", "top3": "Healthcare Services", "concentration": 11.1, "whitespace": 34, "employees": 350, "ratio": 77.7}, {"firm": "Stone Point Capital", "city": "Greenwich", "aum": 27154, "portcos": 60, "top1": "Financial Services", "top2": "Software & SaaS", "top3": "Business Services", "concentration": 30.0, "whitespace": 42, "employees": 240, "ratio": 113.1}, {"firm": "Nordic Capital", "city": "St Helier", "aum": 26625, "portcos": 79, "top1": "Healthcare Services", "top2": "Fintech & Payments", "top3": "Financial Services", "concentration": 34.2, "whitespace": 69, "employees": 340, "ratio": 78.3}, {"firm": "Leonard Green & Partners", "city": "Los Angeles", "aum": 26210, "portcos": 61, "top1": "Consumer Discretionary", "top2": "Healthcare Services", "top3": "Business Services", "concentration": 29.5, "whitespace": 66, "employees": 170, "ratio": 154.2}, {"firm": "Francisco Partners", "city": "San Francisco", "aum": 25775, "portcos": 90, "top1": "Technology (General)", "top2": "Software & SaaS", "top3": "Healthcare Services", "concentration": 21.1, "whitespace": 42, "employees": 190, "ratio": 135.7}, {"firm": "Blue Owl Capital", "city": "New York", "aum": 25672, "portcos": 258, "top1": "Healthcare Services", "top2": "Software & SaaS", "top3": "Consumer Products & Staples", "concentration": 24.4, "whitespace": 69, "employees": 1500, "ratio": 17.1}, {"firm": "Brookfield Asset Management", "city": "Toronto", "aum": 25382, "portcos": 7, "top1": "Industrials & Manufacturing", "top2": "Business Services", "top3": "Software & SaaS", "concentration": 42.9, "whitespace": 57, "employees": 4070, "ratio": 6.2}, {"firm": "Genstar Capital", "city": "San Francisco", "aum": 25337, "portcos": 47, "top1": "Software & SaaS", "top2": "Industrials & Manufacturing", "top3": "Financial Services", "concentration": 25.5, "whitespace": 34, "employees": 100, "ratio": 253.4}, {"firm": "Permira Advisers", "city": "London", "aum": 23787, "portcos": 105, "top1": "Technology (General)", "top2": "Consumer (General)", "top3": "Business Services", "concentration": 47.6, "whitespace": 42, "employees": 670, "ratio": 35.5}, {"firm": "BDT & MSD Partners", "city": "Chicago", "aum": 23088, "portcos": 11, "top1": "Retail", "top2": "Energy & Utilities", "top3": "Technology (General)", "concentration": 18.2, "whitespace": 66, "employees": 500, "ratio": 46.2}, {"firm": "L Catterton", "city": "Greenwich", "aum": 22954, "portcos": 115, "top1": "Consumer Products & Staples", "top2": "Consumer Discretionary", "top3": "Retail", "concentration": 63.5, "whitespace": 66, "employees": 430, "ratio": 53.4}, {"firm": "Summit Partners", "city": "Boston", "aum": 22159, "portcos": 306, "top1": "Technology (General)", "top2": "Healthcare Services", "top3": "Software & SaaS", "concentration": 25.5, "whitespace": 42, "employees": 570, "ratio": 38.9}, {"firm": "Ardian", "city": "Paris", "aum": 21654, "portcos": 123, "top1": "Industrials & Manufacturing", "top2": "Energy & Utilities", "top3": "Business Services", "concentration": 11.4, "whitespace": 57, "employees": 1100, "ratio": 19.7}, {"firm": "Platinum Equity", "city": "Beverly Hills", "aum": 21478, "portcos": 121, "top1": "Industrials & Manufacturing", "top2": "Consumer Products & Staples", "top3": "Marketing & Media", "concentration": 27.3, "whitespace": 57, "employees": 700, "ratio": 30.7}, {"firm": "PSG", "city": "Boston", "aum": 19274, "portcos": 157, "top1": "Software & SaaS", "top2": "Technology (General)", "top3": "Healthcare Services", "concentration": 43.3, "whitespace": 34, "employees": 2800, "ratio": 6.9}, {"firm": "HarbourVest Partners", "city": "Boston", "aum": 17808, "portcos": 17, "top1": "Biotechnology & Pharmaceuticals", "top2": "Technology (General)", "top3": "Marketing & Media", "concentration": 11.8, "whitespace": 57, "employees": 1400, "ratio": 12.7}, {"firm": "The Jordan Company", "city": "New York", "aum": 17245, "portcos": 164, "top1": "Industrials & Manufacturing", "top2": "Logistics & Transportation", "top3": "Healthcare Services", "concentration": 22.6, "whitespace": 57, "employees": 85, "ratio": 202.9}, {"firm": "ICONIQ Capital", "city": "San Francisco", "aum": 16657, "portcos": 171, "top1": "Software & SaaS", "top2": "Fintech & Payments", "top3": "Consumer (General)", "concentration": 48.0, "whitespace": 34, "employees": 470, "ratio": 35.4}, {"firm": "Hamilton Lane", "city": "Conshohocken", "aum": 16255, "portcos": 5, "top1": "Fintech & Payments", "top2": "Software & SaaS", "top3": "Business Services", "concentration": 20.0, "whitespace": 42, "employees": 700, "ratio": 23.2}, {"firm": "BlackRock", "city": "New York", "aum": 15065, "portcos": 4, "top1": "Consumer Products & Staples", "top2": "Industrials & Manufacturing", "top3": "", "concentration": 50.0, "whitespace": 66, "employees": 23000, "ratio": 0.7}, {"firm": "Astorg", "city": "Luxembourg City", "aum": 14347, "portcos": 22, "top1": "Industrials & Manufacturing", "top2": "Technology (General)", "top3": "Business Services", "concentration": 13.6, "whitespace": 57, "employees": 150, "ratio": 95.6}, {"firm": "Vitruvian Partners", "city": "London", "aum": 13538, "portcos": 114, "top1": "Technology (General)", "top2": "Healthcare Services", "top3": "Financial Services", "concentration": 26.3, "whitespace": 42, "employees": 210, "ratio": 64.5}, {"firm": "PAI Partners", "city": "Paris", "aum": 13350, "portcos": 43, "top1": "Consumer Products & Staples", "top2": "Business Services", "top3": "Industrials & Manufacturing", "concentration": 37.2, "whitespace": 66, "employees": 180, "ratio": 74.2}, {"firm": "Accel", "city": "Palo Alto", "aum": 13340, "portcos": 610, "top1": "Software & SaaS", "top2": "AI & Data Analytics", "top3": "Technology (General)", "concentration": 27.7, "whitespace": 34, "employees": 1300, "ratio": 10.3}, {"firm": "Lightspeed Venture Partners", "city": "Menlo Park", "aum": 13035, "portcos": 556, "top1": "Technology (General)", "top2": "Software & SaaS", "top3": "AI & Data Analytics", "concentration": 15.1, "whitespace": 42, "employees": 420, "ratio": 31.0}, {"firm": "Coatue Management", "city": "New York", "aum": 12855, "portcos": 55, "top1": "Fintech & Payments", "top2": "Technology (General)", "top3": "AI & Data Analytics", "concentration": 20.0, "whitespace": 42, "employees": 160, "ratio": 80.3}, {"firm": "MBK Partners", "city": "Seoul", "aum": 12763, "portcos": 52, "top1": "Consumer Products & Staples", "top2": "Industrials & Manufacturing", "top3": "Financial Services", "concentration": 17.3, "whitespace": 66, "employees": 150, "ratio": 85.1}, {"firm": "HSG", "city": "Hong Kong", "aum": 12576, "portcos": 101, "top1": "Technology (General)", "top2": "Consumer (General)", "top3": "Healthcare Services", "concentration": 46.5, "whitespace": 42, "employees": 468, "ratio": 26.9}, {"firm": "Berkshire Partners", "city": "Boston", "aum": 12401, "portcos": 33, "top1": "Logistics & Transportation", "top2": "Retail", "top3": "Marketing & Media", "concentration": 15.2, "whitespace": 67, "employees": 290, "ratio": 42.8}, {"firm": "Roark Capital Group", "city": "Atlanta", "aum": 11904, "portcos": 82, "top1": "Consumer Products & Staples", "top2": "Industrials & Manufacturing", "top3": "Education & Training", "concentration": 39.0, "whitespace": 66, "employees": 250, "ratio": 47.6}, {"firm": "H.I.G Capital", "city": "Miami", "aum": 11903, "portcos": 358, "top1": "Industrials & Manufacturing", "top2": "Healthcare Services", "top3": "Business Services", "concentration": 18.7, "whitespace": 57, "employees": 1500, "ratio": 7.9}, {"firm": "Thomas H. Lee Partners", "city": "Boston", "aum": 11667, "portcos": 129, "top1": "Healthcare Services", "top2": "Consumer Products & Staples", "top3": "Software & SaaS", "concentration": 16.3, "whitespace": 69, "employees": 200, "ratio": 58.3}, {"firm": "General Catalyst Partners", "city": "Cambridge", "aum": 11643, "portcos": 63, "top1": "Industrials & Manufacturing", "top2": "AI & Data Analytics", "top3": "Technology (General)", "concentration": 19.0, "whitespace": 57, "employees": 380, "ratio": 30.6}, {"firm": "BC Partners", "city": "London", "aum": 11605, "portcos": 34, "top1": "Marketing & Media", "top2": "Industrials & Manufacturing", "top3": "Consumer Products & Staples", "concentration": 17.6, "whitespace": 59, "employees": 400, "ratio": 29.0}, {"firm": "LGT Capital Partners", "city": "Pfaeffikon", "aum": 11562, "portcos": 53, "top1": "Healthcare Services", "top2": "Technology (General)", "top3": "Industrials & Manufacturing", "concentration": 30.2, "whitespace": 69, "employees": 80, "ratio": 144.5}, {"firm": "Adams Street Partners", "city": "Chicago", "aum": 11557, "portcos": 130, "top1": "Software & SaaS", "top2": "Healthcare Services", "top3": "Fintech & Payments", "concentration": 22.3, "whitespace": 34, "employees": 420, "ratio": 27.5}, {"firm": "Morgan Stanley Investment Management", "city": "New York", "aum": 11201, "portcos": 205, "top1": "Technology (General)", "top2": "Healthcare Services", "top3": "Consumer (General)", "concentration": 24.9, "whitespace": 42, "employees": 81000, "ratio": 0.1}, {"firm": "Oak Hill Capital", "city": "New York", "aum": 11051, "portcos": 68, "top1": "Marketing & Media", "top2": "Healthcare Services", "top3": "Financial Services", "concentration": 25.0, "whitespace": 59, "employees": 90, "ratio": 122.8}, {"firm": "Quantum Energy Partners", "city": "Houston", "aum": 10995, "portcos": 31, "top1": "Energy & Utilities", "top2": "Industrials & Manufacturing", "top3": "IT Services", "concentration": 87.1, "whitespace": 56, "employees": 130, "ratio": 84.6}, {"firm": "K1 Investment Management", "city": "Manhattan Beach", "aum": 10874, "portcos": 69, "top1": "Software & SaaS", "top2": "Healthcare Services", "top3": "Technology (General)", "concentration": 60.9, "whitespace": 34, "employees": 150, "ratio": 72.5}, {"firm": "Bregal Investments", "city": "London", "aum": 10831, "portcos": 116, "top1": "Software & SaaS", "top2": "Consumer Discretionary", "top3": "Technology (General)", "concentration": 21.6, "whitespace": 34, "employees": 340, "ratio": 31.9}, {"firm": "Audax Group", "city": "Boston", "aum": 10638, "portcos": 105, "top1": "Industrials & Manufacturing", "top2": "Healthcare Services", "top3": "Software & SaaS", "concentration": 31.4, "whitespace": 57, "employees": 450, "ratio": 23.6}, {"firm": "STG", "city": "Menlo Park", "aum": 10562, "portcos": 32, "top1": "Software & SaaS", "top2": "AI & Data Analytics", "top3": "Cybersecurity", "concentration": 46.9, "whitespace": 34, "employees": 130, "ratio": 81.2}, {"firm": "Arctos Partners", "city": "Dallas", "aum": 10498, "portcos": 10, "top1": "Consumer Discretionary", "top2": "Technology (General)", "top3": "Healthcare Services", "concentration": 30.0, "whitespace": 66, "employees": 110, "ratio": 95.4}, {"firm": "Centerbridge Partners", "city": "New York", "aum": 9860, "portcos": 20, "top1": "Software & SaaS", "top2": "Fintech & Payments", "top3": "Healthcare Services", "concentration": 15.0, "whitespace": 34, "employees": 360, "ratio": 27.4}, {"firm": "IK Partners", "city": "London", "aum": 9705, "portcos": 74, "top1": "Business Services", "top2": "Healthcare Services", "top3": "Industrials & Manufacturing", "concentration": 51.4, "whitespace": 59, "employees": 320, "ratio": 30.3}, {"firm": "Alpine Investors", "city": "San Francisco", "aum": 9599, "portcos": 56, "top1": "Business Services", "top2": "Software & SaaS", "top3": "Industrials & Manufacturing", "concentration": 46.4, "whitespace": 59, "employees": 450, "ratio": 21.3}, {"firm": "ARCH Venture Partners", "city": "Chicago", "aum": 9376, "portcos": 120, "top1": "Biotechnology & Pharmaceuticals", "top2": "Healthcare Services", "top3": "Software & SaaS", "concentration": 75.0, "whitespace": 57, "employees": 67, "ratio": 139.9}, {"firm": "Waterland Private Equity Investments", "city": "Bussum", "aum": 9371, "portcos": 185, "top1": "Healthcare Services", "top2": "Business Services", "top3": "Consumer Products & Staples", "concentration": 14.6, "whitespace": 69, "employees": 250, "ratio": 37.5}, {"firm": "Oakley Capital Private Equity", "city": "London", "aum": 8928, "portcos": 41, "top1": "Technology (General)", "top2": "Business Services", "top3": "Consumer (General)", "concentration": 31.7, "whitespace": 42, "employees": 250, "ratio": 35.7}, {"firm": "Kohlberg & Company", "city": "New York", "aum": 8700, "portcos": 29, "top1": "Business Services", "top2": "Healthcare Services", "top3": "Energy & Utilities", "concentration": 17.2, "whitespace": 59, "employees": 130, "ratio": 66.9}, {"firm": "Madison Dearborn Partners", "city": "Chicago", "aum": 8180, "portcos": 25, "top1": "Healthcare Services", "top2": "Financial Services", "top3": "Technology (General)", "concentration": 28.0, "whitespace": 69, "employees": 180, "ratio": 45.4}, {"firm": "Lindsay Goldberg", "city": "New York", "aum": 8130, "portcos": 72, "top1": "Healthcare Services", "top2": "Industrials & Manufacturing", "top3": "Other", "concentration": 16.7, "whitespace": 69, "employees": 92, "ratio": 88.4}, {"firm": "TSG Consumer Partners", "city": "Larkspur", "aum": 7853, "portcos": 78, "top1": "Consumer Products & Staples", "top2": "Healthcare Services", "top3": "Business Services", "concentration": 57.7, "whitespace": 66, "employees": 130, "ratio": 60.4}, {"firm": "Accel-KKR", "city": "Menlo Park", "aum": 7835, "portcos": 159, "top1": "Software & SaaS", "top2": "Business Services", "top3": "Healthcare Services", "concentration": 47.2, "whitespace": 34, "employees": 260, "ratio": 30.1}, {"firm": "Inflexion Private Equity Partners", "city": "London", "aum": 7748, "portcos": 58, "top1": "Business Services", "top2": "Technology (General)", "top3": "Industrials & Manufacturing", "concentration": 29.3, "whitespace": 59, "employees": 220, "ratio": 35.2}, {"firm": "TCV", "city": "Menlo Park", "aum": 7727, "portcos": 92, "top1": "Software & SaaS", "top2": "Consumer (General)", "top3": "Fintech & Payments", "concentration": 47.8, "whitespace": 34, "employees": 540, "ratio": 14.3}, {"firm": "FTV Capital", "city": "San Francisco", "aum": 7551, "portcos": 134, "top1": "Financial Services", "top2": "IT Services", "top3": "Business Services", "concentration": 21.6, "whitespace": 42, "employees": 150, "ratio": 50.3}, {"firm": "Eurazeo", "city": "Paris", "aum": 7537, "portcos": 212, "top1": "IT Services", "top2": "Consumer (General)", "top3": "Healthcare Services", "concentration": 29.2, "whitespace": 42, "employees": 550, "ratio": 13.7}, {"firm": "Investindustrial", "city": "London", "aum": 7505, "portcos": 30, "top1": "Materials & Chemicals", "top2": "Consumer Products & Staples", "top3": "Industrials & Manufacturing", "concentration": 20.0, "whitespace": 57, "employees": 270, "ratio": 27.8}, {"firm": "Nautic Partners", "city": "Providence", "aum": 7500, "portcos": 35, "top1": "Healthcare Services", "top2": "Industrials & Manufacturing", "top3": "Technology (General)", "concentration": 42.9, "whitespace": 69, "employees": 110, "ratio": 68.2}, {"firm": "Valor Equity Partners", "city": "Chicago", "aum": 7388, "portcos": 86, "top1": "Technology (General)", "top2": "Healthcare Services", "top3": "Consumer Products & Staples", "concentration": 41.9, "whitespace": 42, "employees": 130, "ratio": 56.8}, {"firm": "TowerBrook Capital Partners", "city": "New York", "aum": 7270, "portcos": 60, "top1": "Healthcare Services", "top2": "Consumer Products & Staples", "top3": "Business Services", "concentration": 18.3, "whitespace": 69, "employees": 200, "ratio": 36.4}, {"firm": "Arcline Investment Management", "city": "San Francisco", "aum": 7250, "portcos": 9, "top1": "Other", "top2": "Energy & Utilities", "top3": "Healthcare Services", "concentration": 33.3, "whitespace": 50, "employees": 70, "ratio": 103.6}, {"firm": "One Equity Partners", "city": "New York City", "aum": 7146, "portcos": 53, "top1": "Industrials & Manufacturing", "top2": "Software & SaaS", "top3": "Other", "concentration": 26.4, "whitespace": 57, "employees": 120, "ratio": 59.5}, {"firm": "Flagship Pioneering", "city": "Cambridge", "aum": 7070, "portcos": 34, "top1": "Biotechnology & Pharmaceuticals", "top2": "Technology (General)", "top3": "Healthcare Services", "concentration": 79.4, "whitespace": 57, "employees": 780, "ratio": 9.1}, {"firm": "B Capital", "city": "Manhattan Beach", "aum": 6939, "portcos": 12, "top1": "Technology (General)", "top2": "Energy & Utilities", "top3": "Healthcare Services", "concentration": 41.7, "whitespace": 42, "employees": 280, "ratio": 24.8}, {"firm": "AEA Investors", "city": "New York", "aum": 6873, "portcos": 130, "top1": "Industrials & Manufacturing", "top2": "Business Services", "top3": "Retail", "concentration": 20.0, "whitespace": 57, "employees": 260, "ratio": 26.4}, {"firm": "Investcorp", "city": "Manama", "aum": 6859, "portcos": 40, "top1": "Technology (General)", "top2": "Business Services", "top3": "Financial Services", "concentration": 30.0, "whitespace": 42, "employees": 750, "ratio": 9.1}, {"firm": "EnCap Investments", "city": "Houston", "aum": 6650, "portcos": 21, "top1": "Energy & Utilities", "top2": "Other", "top3": "", "concentration": 90.5, "whitespace": 56, "employees": 49, "ratio": 135.7}, {"firm": "Five Arrows", "city": "Paris", "aum": 6618, "portcos": 35, "top1": "Software & SaaS", "top2": "Healthcare Services", "top3": "Business Services", "concentration": 31.4, "whitespace": 34, "employees": 235, "ratio": 28.2}, {"firm": "Kinderhook Industries", "city": "New York City", "aum": 6538, "portcos": 35, "top1": "Industrials & Manufacturing", "top2": "Energy & Utilities", "top3": "Business Services", "concentration": 25.7, "whitespace": 57, "employees": 34, "ratio": 192.3}, {"firm": "The Sterling Group", "city": "Houston", "aum": 6378, "portcos": 49, "top1": "Industrials & Manufacturing", "top2": "Business Services", "top3": "Energy & Utilities", "concentration": 46.9, "whitespace": 57, "employees": 140, "ratio": 45.6}, {"firm": "GHO Capital Partners", "city": "London", "aum": 6368, "portcos": 19, "top1": "Biotechnology & Pharmaceuticals", "top2": "Other", "top3": "Healthcare Services", "concentration": 47.4, "whitespace": 57, "employees": 86, "ratio": 74.0}];
+
+        let currentData = [...peData];
+        let sortColumn = 'aum';
+        let sortDirection = 'desc';
+        let chart = null;
+
+        function checkPassword() {
+            const input = document.getElementById('password-input').value;
+            if (input === ACCESS_CODE) {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                initDashboard();
+            } else {
+                document.getElementById('error-msg').classList.remove('hidden');
+                document.getElementById('password-input').value = '';
+            }
+        }
+
+        function initDashboard() {
+            populateIndustryFilter();
+            sortData();
+            renderTable();
+            renderChart();
+            updateOptButtons();
+            renderTopTargets();
+        }
+
+        function populateIndustryFilter() {
+            const industries = [...new Set(peData.map(d => d.top1))].filter(Boolean).sort();
+            const select = document.getElementById('industry-filter');
+            // Clear existing options except first "All"
+            while (select.options.length > 1) {
+                select.remove(1);
+            }
+            industries.forEach(ind => {
+                const opt = document.createElement('option');
+                opt.value = ind;
+                opt.textContent = ind.replace(' & ', '/').substring(0, 22);
+                select.appendChild(opt);
+            });
+        }
+
+        function filterTable() {
+            const search = document.getElementById('search-input').value.toLowerCase();
+            const industry = document.getElementById('industry-filter').value;
+            const wsFilter = document.getElementById('whitespace-filter').value;
+            const buyFilter = document.getElementById('buy-filter').value;
+
+            currentData = peData.filter(d => {
+                const matchSearch = d.firm.toLowerCase().includes(search);
+                const matchIndustry = !industry || d.top1 === industry;
+                
+                // Whitespace quartile filter
+                let matchWhitespace = true;
+                if (wsFilter === '0-25') matchWhitespace = d.whitespace <= 25;
+                else if (wsFilter === '26-50') matchWhitespace = d.whitespace >= 26 && d.whitespace <= 50;
+                else if (wsFilter === '51-75') matchWhitespace = d.whitespace >= 51 && d.whitespace <= 75;
+                else if (wsFilter === '76-100') matchWhitespace = d.whitespace >= 76;
+                
+                // Buy signal filter
+                let matchBuy = true;
+                if (buyFilter === 'high') matchBuy = d.ratio && d.ratio >= 100;
+                else if (buyFilter === 'med') matchBuy = d.ratio && d.ratio >= 50 && d.ratio < 100;
+                else if (buyFilter === 'low') matchBuy = !d.ratio || d.ratio < 50;
+                
+                return matchSearch && matchIndustry && matchWhitespace && matchBuy;
+            });
+
+            sortData();
+            renderTable();
+            renderChart();
+        }
+
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'desc';
+            }
+            sortData();
+            renderTable();
+        }
+
+        function sortData() {
+            currentData.sort((a, b) => {
+                let valA = a[sortColumn] || 0;
+                let valB = b[sortColumn] || 0;
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+                if (sortDirection === 'asc') return valA > valB ? 1 : -1;
+                return valA < valB ? 1 : -1;
+            });
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = currentData.map(d => {
+                const isHighOpp = d.whitespace >= 60 && d.concentration >= 30;
+                const isBuyer = d.ratio >= 100;
+                return `
+                <tr class="table-row text-sm">
+                    <td class="px-4 py-3">
+                        <div class="font-medium text-slate-900">${d.firm}</div>
+                        <div class="text-xs text-slate-400">${d.city}</div>
+                    </td>
+                    <td class="px-3 py-3 text-slate-600">$${(d.aum/1000).toFixed(0)}B</td>
+                    <td class="px-3 py-3">
+                        <span class="text-xs text-slate-500">${d.top1.split(' ')[0]}</span>
+                    </td>
+                    <td class="px-3 py-3 text-center">
+                        <span class="inline-flex items-center justify-center w-8 h-5 rounded text-xs font-medium ${d.whitespace >= 60 ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-50 text-slate-600'}">${d.whitespace}</span>
+                    </td>
+                    <td class="px-3 py-3 text-right">
+                        <span class="${isBuyer ? 'text-amber-600 font-medium' : 'text-slate-500'}">${d.ratio ? '$' + d.ratio.toFixed(0) + 'M' : '—'}</span>
+                    </td>
+                </tr>
+            `}).join('');
+            document.getElementById('result-count').textContent = `${currentData.length} firms`;
+        }
+
+        let selectedCriteria = ['ws', 'conc', 'ratio']; // Default: all selected
+
+        function toggleOptCriteria(criterion) {
+            const idx = selectedCriteria.indexOf(criterion);
+            if (idx > -1) {
+                // Don't allow deselecting if it's the only one
+                if (selectedCriteria.length > 1) {
+                    selectedCriteria.splice(idx, 1);
+                }
+            } else {
+                selectedCriteria.push(criterion);
+            }
+            updateOptButtons();
+            renderTopTargets();
+        }
+
+        function updateOptButtons() {
+            ['ws', 'conc', 'ratio'].forEach(c => {
+                const btn = document.getElementById('opt-' + c);
+                if (selectedCriteria.includes(c)) {
+                    btn.className = 'opt-btn px-2 py-1 text-xs rounded bg-slate-900 text-white';
+                } else {
+                    btn.className = 'opt-btn px-2 py-1 text-xs rounded border border-slate-200 text-slate-400 hover:border-slate-300';
+                }
+            });
+        }
+
+        function renderTopTargets() {
+            // Calculate score based on selected criteria
+            const targets = [...peData]
+                .map(d => {
+                    let score = 1;
+                    if (selectedCriteria.includes('ws')) score *= d.whitespace / 100;
+                    if (selectedCriteria.includes('conc')) score *= d.concentration / 100;
+                    if (selectedCriteria.includes('ratio')) score *= (d.ratio || 1) / 100;
+                    return { ...d, score };
+                })
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 5);
+            
+            const container = document.getElementById('top-targets');
+            
+            // Always show all three values, bold the active criteria, lighter for inactive
+            container.innerHTML = targets.map(d => {
+                const wsClass = selectedCriteria.includes('ws') ? 'text-slate-700 font-medium' : 'text-slate-400';
+                const concClass = selectedCriteria.includes('conc') ? 'text-slate-700 font-medium' : 'text-slate-400';
+                const ratioClass = selectedCriteria.includes('ratio') ? 'text-slate-700 font-medium' : 'text-slate-400';
+                const ratioVal = d.ratio ? '$' + d.ratio.toFixed(0) + 'M' : '—';
+                
+                return '<tr class="h-7 hover:bg-slate-50 cursor-pointer" onmouseenter="highlightBubble(\'' + d.firm.replace(/'/g, "\\'") + '\')" onmouseleave="unhighlightBubble()">' +
+                    '<td class="text-slate-700 font-medium" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + d.firm + '</td>' +
+                    '<td class="text-right ' + wsClass + '" style="width:48px;">' + d.whitespace + '%</td>' +
+                    '<td class="text-right ' + concClass + '" style="width:48px;">' + d.concentration.toFixed(0) + '%</td>' +
+                    '<td class="text-right ' + ratioClass + '" style="width:64px;">' + ratioVal + '</td>' +
+                '</tr>';
+            }).join('');
+        }
+
+        let originalRadius = null;
+        let highlightedIndex = null;
+        
+        function highlightBubble(firmName) {
+            if (!chart) return;
+            const data = chart.data.datasets[0].data;
+            
+            const idx = data.findIndex(d => d.firm === firmName);
+            if (idx === -1) return;
+            
+            highlightedIndex = idx;
+            originalRadius = data[idx].r;
+            data[idx].r = originalRadius * 1.8;
+            chart.update('none');
+        }
+        
+        function unhighlightBubble() {
+            if (!chart || highlightedIndex === null) return;
+            const data = chart.data.datasets[0].data;
+            data[highlightedIndex].r = originalRadius;
+            highlightedIndex = null;
+            originalRadius = null;
+            chart.update('none');
+        }
+
+        function renderChart() {
+            const ctx = document.getElementById('scatterChart').getContext('2d');
+            if (chart) chart.destroy();
+
+            // Add slight jitter to prevent exact overlaps
+            const seenCoords = {};
+            const chartData = currentData.map(d => {
+                let x = d.concentration;
+                let y = d.whitespace;
+                const key = `${x}-${y}`;
+                if (seenCoords[key]) {
+                    x += (Math.random() - 0.5) * 3;
+                    y += (Math.random() - 0.5) * 2;
+                }
+                seenCoords[key] = true;
+                return {
+                    x: x,
+                    y: y,
+                    r: Math.max(3, Math.sqrt(d.portcos) * 1.2),
+                    firm: d.firm,
+                    portcos: d.portcos,
+                    aum: d.aum,
+                    top1: d.top1,
+                    ratio: d.ratio,
+                    origConc: d.concentration,
+                    origWs: d.whitespace
+                };
+            });
+
+            chart = new Chart(ctx, {
+                type: 'bubble',
+                data: {
+                    datasets: [{
+                        data: chartData,
+                        backgroundColor: currentData.map(d => {
+                            if (d.whitespace >= 60 && d.concentration >= 30) return 'rgba(52, 211, 153, 0.6)';
+                            return 'rgba(148, 163, 184, 0.4)';
+                        }),
+                        borderColor: currentData.map(d => {
+                            if (d.ratio >= 100) return 'rgba(251, 146, 60, 0.9)';
+                            if (d.whitespace >= 60 && d.concentration >= 30) return 'rgba(52, 211, 153, 0.8)';
+                            return 'rgba(148, 163, 184, 0.5)';
+                        }),
+                        borderWidth: currentData.map(d => d.ratio >= 100 ? 2 : 1)
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'nearest',
+                        intersect: true
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Concentration %', color: '#94a3b8', font: { size: 11 } },
+                            min: 0, max: 100,
+                            grid: { color: 'rgba(241,245,249,1)' },
+                            ticks: { color: '#94a3b8', font: { size: 10 } }
+                        },
+                        y: {
+                            title: { display: true, text: 'Whitespace %', color: '#94a3b8', font: { size: 11 } },
+                            min: 25, max: 75,
+                            grid: { color: 'rgba(241,245,249,1)' },
+                            ticks: { color: '#94a3b8', font: { size: 10 } }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'white',
+                            titleColor: '#1e293b',
+                            bodyColor: '#64748b',
+                            borderColor: '#e2e8f0',
+                            borderWidth: 1,
+                            padding: 10,
+                            displayColors: false,
+                            mode: 'nearest',
+                            intersect: true,
+                            callbacks: {
+                                title: (ctx) => ctx[0]?.raw?.firm || '',
+                                label: (ctx) => {
+                                    const d = ctx.raw;
+                                    if (!d) return [];
+                                    return [
+                                        `AUM: $${(d.aum/1000).toFixed(0)}B · ${d.portcos} companies`,
+                                        `${d.top1}`,
+                                        `${d.origConc}% concentration · ${d.origWs}% whitespace`,
+                                        d.ratio ? `$${d.ratio.toFixed(0)}M/employee` : ''
+                                    ].filter(Boolean);
+                                }
+                            },
+                            filter: (tooltipItem, index) => index === 0
+                        }
+                    }
+                }
+            });
+        }
+
+        document.getElementById('password-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkPassword();
+        });
+    </script>
+</body>
+</html>
